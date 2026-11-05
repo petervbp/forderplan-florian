@@ -163,7 +163,7 @@
 // Reine Funktionen ohne Bildschirm-Zugriff: Text prüfen, Platzhalter ersetzen, Word-Datei bauen.
 
 // Versionsnummer: nur hier ändern. baue_konverter.py übernimmt sie in den Dateinamen und die Download-Seite.
-const VERSION = '1.5';
+const VERSION = '1.6';
 const DOWNLOAD_SEITE = 'https://petervbp.github.io/forderplan-florian/';
 // Muss genau der Adresse unter connect-src in der Sicherheitsrichtlinie (Kopf der Datei) entsprechen.
 const VERSION_URL = 'https://petervbp.github.io/forderplan-florian/version.json';
@@ -675,7 +675,7 @@ function baueDokument(m, personen = {}, schule = {}) {
     const kopfBreiten = [10000, BREITE - 10000];
     teile.push(tabelle(kopfBreiten, [zeile([
       zelle(
-        (schulName ? absatz(lauf(schulName, { b: true, sz: 30, color: F.dunkel })) : '') +
+        (schulName ? absatz(lauf(schulName, { b: true, sz: 26, color: F.dunkel })) : '') +
         (schulAnschrift ? absatz(lauf(schulAnschrift, { sz: 19, color: F.leise }), { before: 20 }) : ''),
         kopfBreiten[0], { vAlign: 'center', mar: [0, 0, 0, 0] }),
       zelle(vertraulich, kopfBreiten[1], { vAlign: 'center' })
@@ -684,14 +684,14 @@ function baueDokument(m, personen = {}, schule = {}) {
     teile.push(vertraulich);
   }
 
-  teile.push(absatz('', { after: 200, rahmenUnten: { sz: 18, space: 1, color: F.akzent } }));
+  teile.push(absatz('', { after: 100, line: 120, rahmenUnten: { sz: 18, space: 1, color: F.akzent } }));
 
   // Titel
-  teile.push(absatz(lauf('Individueller Förderplan', { b: true, sz: 52, color: F.dunkel }) + lauf(`  Nr. ${m.nr}`, { b: true, sz: 52, color: F.mittel }),
-    { before: 240, after: 60, outline: 0 }));
+  teile.push(absatz(lauf('Individueller Förderplan', { b: true, sz: 44, color: F.dunkel }) + lauf(`  Nr. ${m.nr}`, { b: true, sz: 44, color: F.mittel }),
+    { before: 80, after: 20, outline: 0 }));
   teile.push(absatz(
-    lauf('für ', { sz: 28, color: F.leise }) + lauf(`${s.vorname} ${s.nachname}`, { b: true, sz: 28, color: F.text }) +
-    lauf(`   ·   geb. am ${s.geburtsdatum}   ·   Schuljahr ${s.schuljahr}`, { sz: 28, color: F.leise }), { after: 280 }));
+    lauf('für ', { sz: 24, color: F.leise }) + lauf(`${s.vorname} ${s.nachname}`, { b: true, sz: 24, color: F.text }) +
+    lauf(`   ·   geb. am ${s.geburtsdatum}   ·   Schuljahr ${s.schuljahr}`, { sz: 24, color: F.leise }), { after: 140 }));
 
   // Eckdaten-Band
   const band = [
@@ -701,32 +701,33 @@ function baueDokument(m, personen = {}, schule = {}) {
   const bandBreiten = aufteilen([12, 15, 15, 13, 25, 20]);
   teile.push(tabelle(bandBreiten, [
     zeile(band.map(([l], i) => zelle(absatz(lauf(l, { caps: true, spacing: 10, sz: 15, color: F.leise, b: true })), bandBreiten[i], { shd: F.flaeche }))),
-    zeile(band.map(([, w], i) => zelle(absatz(inline(w, { b: true, sz: 22, color: F.text })), bandBreiten[i], { mar: [100, 110, 100, 110] })))
+    zeile(band.map(([, w], i) => zelle(absatz(inline(w, { b: true, sz: 22, color: F.text })), bandBreiten[i], { mar: [60, 110, 60, 110] })))
   ]));
 
   // Rahmeninformationen
-  teile.push(ueberschrift('Rahmeninformationen', { before: 320, sz: 26 }));
+  teile.push(ueberschrift('Rahmeninformationen', { before: 180, after: 80, sz: 26 }));
   const rBreiten = aufteilen([28, 72]);
   const rahmenSortiert = [...RAHMEN.map(d => m.rahmen.find(r => r.key === d.key)).filter(Boolean), ...m.rahmen.filter(r => !r.key)];
   teile.push(tabelle(rBreiten, rahmenSortiert.map(r => zeile([
     zelle(absatz(lauf(r.label, { b: true, sz: 19, color: F.dunkel })), rBreiten[0], { shd: F.flaeche }),
     zelle(absatz(inline(r.wert || '–', { sz: 20 })), rBreiten[1])
-  ], { cantSplit: true }))));
+  ], { cantSplit: true })), { marTop: 45, marBottom: 45 }));
 
   // Nachteilsausgleich
   if (m.nta.length) {
-    teile.push(ueberschrift('Nachteilsausgleich', { before: 280, sz: 26 }));
+    teile.push(ueberschrift('Nachteilsausgleich', { before: 160, after: 80, sz: 26 }));
     const nBreiten = aufteilen([34, 26, 12, 28]);
     const kopf = ['Art', 'Fach / Situation', 'seit', 'Wirkung (bei Evaluation)'];
     teile.push(tabelle(nBreiten, [
-      zeile(kopf.map((k, i) => zelle(absatz(lauf(k, { b: true, sz: 18, color: F.dunkel })), nBreiten[i], { shd: F.flaeche })), { kopf: true }),
-      ...m.nta.map(r => zeile([r.art, r.fach, r.seit, r.wirkung].map((w, i) => zelle(absatz(inline(w, { sz: 20 })), nBreiten[i])), { cantSplit: true }))
-    ]));
+      // keepNext hält die Tabelle zusammen: Passt sie nicht mehr auf die Seite, wandert sie ganz auf die nächste
+      zeile(kopf.map((k, i) => zelle(absatz(lauf(k, { b: true, sz: 18, color: F.dunkel }), { keepNext: true }), nBreiten[i], { shd: F.flaeche })), { kopf: true }),
+      ...m.nta.map((r, n) => zeile([r.art, r.fach, r.seit, r.wirkung].map((w, i) => zelle(absatz(inline(w, { sz: 20 }), { keepNext: n < m.nta.length - 1 }), nBreiten[i])), { cantSplit: true }))
+    ], { marTop: 45, marBottom: 45 }));
   }
 
   // Beteiligte und Vorgänger
   const beteiligt = beteiligteText(personen) || s.beteiligte;
-  teile.push(absatz(lauf('An der Förderplanung beteiligt: ', { b: true, sz: 20, color: F.dunkel }) + inline(beteiligt, { sz: 20 }), { before: 300, after: 60 }));
+  teile.push(absatz(lauf('An der Förderplanung beteiligt: ', { b: true, sz: 20, color: F.dunkel }) + inline(beteiligt, { sz: 20 }), { before: 140, after: 40 }));
   teile.push(absatz(lauf('Vorheriger Förderplan: ', { b: true, sz: 20, color: F.dunkel }) + inline(s.vorheriger, { sz: 20 })));
 
   // --- Förderplanung nach Kompetenzbereichen ---
