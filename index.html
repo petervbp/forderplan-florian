@@ -27,6 +27,11 @@
   li { margin-bottom: 6px; }
   .sicher { margin: 0 0 12px; padding: 12px 14px; background: var(--flaeche); border-left: 5px solid var(--dunkel); border-radius: 8px; }
   .leise { margin: 0; color: var(--text-leise); font-size: 14px; }
+  .doku { margin-top: 18px; }
+  .doku h2 { margin-top: 20px; }
+  .doku h2:first-child { margin-top: 0; }
+  .doku p { margin: 0 0 12px; }
+  .doku a, .sicher a { color: var(--dunkel); }
   footer { max-width: 720px; margin: 0 auto; padding: 0 24px 28px; color: var(--text-leise); font-size: 13px; }
 </style>
 </head>
@@ -56,6 +61,30 @@
 
     <p class="sicher">Text und Namen, die du später in den Konverter einträgst, bleiben auf deinem Rechner. Sie werden nicht ins Internet geschickt.</p>
     <p class="leise">Du hast schon eine ältere Version? Lade einfach die neue herunter und lösche die alte Datei.</p>
+  </section>
+
+  <section class="karte doku">
+    <h2>Was ist Florian?</h2>
+    <p>Förderplan Florian ist ein KI-Assistent im Schul-Chat AIS.chat in NRW. Er führt dich in 12 Schritten durch die Erstellung eines individuellen Förderplans für ein Grundschulkind. Florian ist kein Pädagoge und kein Therapeut. Die Beobachtungen kommen von dir, und du entscheidest über alle Inhalte.</p>
+
+    <h2>Wie funktioniert er?</h2>
+    <ol>
+      <li>Öffne Florian über <a href="https://app.ais-chat.schule/assistants/e495ff29-b12d-42c7-b55c-f615ca64cb53">diesen Link</a> und wähle oben links 'SONNET 5.5' oder besser als aktuelles Sprachmodell aus. Mit schwächeren Modellen arbeitet Florian nicht zuverlässig.</li>
+      <li>Gib dem Kind einen Ersatznamen. Den echten Namen braucht Florian nicht.</li>
+      <li>Florian fragt dich Schritt für Schritt nach deinen Beobachtungen und schreibt sie sachlich auf. Du prüfst und bestätigst jeden Abschnitt.</li>
+      <li>Du legst die Schwerpunkte fest. Dazu schlägt Florian Ziele vor. Die Vorschläge für Maßnahmen stammen aus den TaskCards <a href="https://qua-lis.taskcards.app/#/board/013b5c70-fcca-4ddf-b7b4-8011a158d508">„Prävention trifft Förderung“</a> von QUA-LiS NRW, die in Kooperation mit dem Ministerium für Schule und Bildung entstanden sind. Erst wenn du nach mehr fragst, ergänzt Florian Ideen aus seinem allgemeinen Wissen und kennzeichnet sie. Du wählst aus, änderst oder ergänzt Eigenes.</li>
+      <li>Am Ende bekommst du den fertigen Text und kopierst ihn in den Konverter.</li>
+    </ol>
+
+    <p class="sicher"><b>Wichtig:</b> In AIS.chat dürfen keine personenbezogenen Daten eingegeben werden. Bevor du etwas hochlädst oder hineinkopierst, entferne oder schwärze alle Namen, Geburtsdaten und Adressen. Florian erinnert dich daran, verantwortlich bist du. Prüfe auch alle Vorschläge, denn eine KI kann etwas übersehen oder falsch wiedergeben.</p>
+
+    <p class="sicher"><b>Tokenvolumen:</b> Zur Sicherheit beginne einen Förderplan nur, wenn du noch wenigstens 30 % Tokenvolumen übrig hast.</p>
+
+    <h2>Wie kommst du an AIS.chat?</h2>
+    <p>AIS.chat ist in NRW kostenlos für Lehrkräfte sowie pädagogische und sozialpädagogische Fachkräfte im Landes- oder Ersatzschuldienst. Deine Schulleitung registriert die Schule und legt dich als Benutzer an. Vor der ersten Anmeldung unter <a href="https://nrw.ais.schule/login">nrw.ais.schule/login</a> machst du den KI-Selbstlernkurs. Die Anleitung steht bei <a href="https://www.lernen-digital.nrw/zugang-zu-AIS.chat">lernen-digital.nrw</a>. Florian gibt es bisher nur für NRW.</p>
+
+    <h2>Wozu brauchst du den Konverter?</h2>
+    <p>Florian gibt nur Text aus, in dem statt der Namen Platzhalter stehen. Der Konverter macht daraus ein fertiges Word-Dokument und setzt die echten Namen ein. Das passiert nur auf deinem Rechner, so kommen die Namen nicht in den Chat.</p>
   </section>
 </main>
 <footer>Version 1.4</footer>
