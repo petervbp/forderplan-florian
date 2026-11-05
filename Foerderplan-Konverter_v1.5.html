@@ -163,7 +163,7 @@
 // Reine Funktionen ohne Bildschirm-Zugriff: Text prüfen, Platzhalter ersetzen, Word-Datei bauen.
 
 // Versionsnummer: nur hier ändern. baue_konverter.py übernimmt sie in den Dateinamen und die Download-Seite.
-const VERSION = '1.4';
+const VERSION = '1.5';
 const DOWNLOAD_SEITE = 'https://petervbp.github.io/forderplan-florian/';
 // Muss genau der Adresse unter connect-src in der Sicherheitsrichtlinie (Kopf der Datei) entsprechen.
 const VERSION_URL = 'https://petervbp.github.io/forderplan-florian/version.json';
@@ -663,13 +663,26 @@ function ueberschrift(text, o = {}) {
 
 const OHNE = '<w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/>';
 
-function baueDokument(m, personen = {}) {
+function baueDokument(m, personen = {}, schule = {}) {
   const s = m.stammdaten;
   const teile = [];
 
-  // --- Seite 1: Vertraulich-Hinweis ---
-  teile.push(absatz(lauf('Vertraulich', { caps: true, spacing: 20, sz: 16, color: F.dunkel, b: true }), { jc: 'right' }));
-  teile.push(absatz(lauf('enthält personenbezogene Daten', { sz: 16, color: F.leise }), { jc: 'right' }));
+  // --- Seite 1: Schule (freiwillig) und Vertraulich-Hinweis ---
+  const vertraulich = absatz(lauf('Vertraulich', { caps: true, spacing: 20, sz: 16, color: F.dunkel, b: true }), { jc: 'right' }) +
+    absatz(lauf('enthält personenbezogene Daten', { sz: 16, color: F.leise }), { jc: 'right' });
+  const schulName = (schule.name || '').trim(), schulAnschrift = (schule.anschrift || '').trim();
+  if (schulName || schulAnschrift) {
+    const kopfBreiten = [10000, BREITE - 10000];
+    teile.push(tabelle(kopfBreiten, [zeile([
+      zelle(
+        (schulName ? absatz(lauf(schulName, { b: true, sz: 30, color: F.dunkel })) : '') +
+        (schulAnschrift ? absatz(lauf(schulAnschrift, { sz: 19, color: F.leise }), { before: 20 }) : ''),
+        kopfBreiten[0], { vAlign: 'center', mar: [0, 0, 0, 0] }),
+      zelle(vertraulich, kopfBreiten[1], { vAlign: 'center' })
+    ])], { ohneRahmen: true, marTop: 0, marBottom: 0 }));
+  } else {
+    teile.push(vertraulich);
+  }
 
   teile.push(absatz('', { after: 200, rahmenUnten: { sz: 18, space: 1, color: F.akzent } }));
 
@@ -809,12 +822,14 @@ function baueDokument(m, personen = {}) {
 
 const W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
 
-function kopfzeile(m) {
+function kopfzeile(m, schule = {}) {
   const s = m.stammdaten;
+  const schulName = (schule.name || '').trim();
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr ${W_NS}>` +
     absatz(lauf(`Individueller Förderplan Nr. ${m.nr}`, { b: true, sz: 17, color: F.dunkel }) +
-      lauf(`   ·   ${s.vorname} ${s.nachname}   ·   Schuljahr ${s.schuljahr}`, { sz: 17, color: F.leise }),
-      { rahmenUnten: { sz: 4, space: 4, color: F.linie } }) +
+      lauf(`   ·   ${s.vorname} ${s.nachname}   ·   Schuljahr ${s.schuljahr}`, { sz: 17, color: F.leise }) +
+      (schulName ? '<w:r><w:tab/></w:r>' + lauf(schulName, { sz: 17, color: F.leise }) : ''),
+      { tabs: schulName ? [{ val: 'right', pos: BREITE }] : undefined, rahmenUnten: { sz: 4, space: 4, color: F.linie } }) +
     '</w:hdr>';
 }
 
@@ -840,7 +855,7 @@ function stile() {
     '</w:styles>';
 }
 
-function baueDocx(m, personen = {}) {
+function baueDocx(m, personen = {}, schule = {}) {
   const enc = new TextEncoder();
   const ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
@@ -872,8 +887,8 @@ function baueDocx(m, personen = {}) {
   const app = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Förderplan-Konverter</Application></Properties>';
   const dateien = [
     ['[Content_Types].xml', ct], ['_rels/.rels', relsRoot], ['docProps/core.xml', core], ['docProps/app.xml', app],
-    ['word/document.xml', baueDokument(m, personen)], ['word/_rels/document.xml.rels', relsDoc], ['word/styles.xml', stile()],
-    ['word/settings.xml', settings], ['word/header1.xml', leererKopf], ['word/header2.xml', kopfzeile(m)],
+    ['word/document.xml', baueDokument(m, personen, schule)], ['word/_rels/document.xml.rels', relsDoc], ['word/styles.xml', stile()],
+    ['word/settings.xml', settings], ['word/header1.xml', leererKopf], ['word/header2.xml', kopfzeile(m, schule)],
     ['word/footer1.xml', fusszeile()], ['word/footer2.xml', fusszeile()]
   ].map(([name, inhalt]) => ({ name, daten: typeof inhalt === 'string' ? enc.encode(inhalt) : inhalt }));
   return zipOhneKompression(dateien);
@@ -925,7 +940,7 @@ const KERN = { pruefe, ersetzeAlles, ersetzeText, pruefeDatum, dateiname, baueDo
   if (typeof document === 'undefined') return;
   const $ = (id) => document.getElementById(id);
   const eingabe = $('eingabe'), status = $('status'), felder = $('felder');
-  let ergebnis = null, werte = {}, personen = {}, timer = null;
+  let ergebnis = null, werte = {}, personen = {}, schule = {}, timer = null;
 
   // Online gibt es nur den Hinweis zum Herunterladen: Eingaben sollen nie auf einer Website stattfinden.
   if (location.protocol !== 'file:') {
@@ -1003,6 +1018,11 @@ const KERN = { pruefe, ersetzeAlles, ersetzeText, pruefeDatum, dateiname, baueDo
     $('karte2').classList.toggle('aus', !ok);
     felder.innerHTML = '';
     if (!ok) { pruefeFelder(); return; }
+
+    // Schule: freiwillig, steht oben im Word-Dokument
+    gruppe('Die Schule', 'Freiwillig. Steht oben im Word-Dokument und wird nicht gespeichert.');
+    feld('schule_name', 'Name der Schule', schule.name, '', v => { schule.name = v; }, {});
+    feld('schule_anschrift', 'Anschrift', schule.anschrift, 'z. B. Musterstraße 1 · 12345 Musterstadt', v => { schule.anschrift = v; }, {});
 
     // a) Angaben zum Kind (Platzhalter aus dem Text)
     if (ergebnis.platzhalter.length) {
@@ -1099,7 +1119,7 @@ const KERN = { pruefe, ersetzeAlles, ersetzeText, pruefeDatum, dateiname, baueDo
     let name = $('dateiname').value.trim() || 'Foerderplan.docx';
     if (!/\.docx$/i.test(name)) name += '.docx';
     const modell = KERN.ersetzeAlles(ergebnis.modell, sauber());
-    const bytes = KERN.baueDocx(modell, saubereNamen());
+    const bytes = KERN.baueDocx(modell, saubereNamen(), schule);
     const typ = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     if (window.showSaveFilePicker) {
       try {
@@ -1121,7 +1141,7 @@ const KERN = { pruefe, ersetzeAlles, ersetzeText, pruefeDatum, dateiname, baueDo
   };
 
   $('btnNeu').onclick = () => {
-    eingabe.value = ''; werte = {}; personen = {}; ergebnis = null;
+    eingabe.value = ''; werte = {}; personen = {}; schule = {}; ergebnis = null;
     $('ergebnis').style.display = 'none'; $('dateiname').value = '';
     zeigeStatus(); window.scrollTo(0, 0); eingabe.focus();
   };
